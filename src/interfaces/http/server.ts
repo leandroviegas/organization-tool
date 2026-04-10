@@ -6,7 +6,7 @@ import { routes } from "./routes";
 import { processError } from "@/core/errors/error.handler";
 import { languageEnum } from "@/core/constants/language.enum";
 import logger from "@/infrastructure/logger/logger";
-import { corsConfig, serverConfig } from "@/infrastructure/config/env";
+import { corsConfig, serverConfig } from "@/infrastructure/config";
 import { errorSchema } from "./schemas";
 import { seed } from "@/infrastructure/database/prisma/seed";
 
