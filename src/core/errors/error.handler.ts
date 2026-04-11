@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { handlePrismaError, handlePrismaValidationError } from "./prisma.handler";
 import { languageEnum } from '@/core/constants/language.enum';
 import { handleElysiaValidationError } from "./validation.handler";
-import { ValidationError } from "elysia";
+import { ErrorContext, ValidationError } from "elysia";
 
 export class AppError extends Error {
   constructor(
@@ -26,62 +26,46 @@ interface ErrorResponse {
   message?: string;
 }
 
-export async function processError(
-  error: unknown,
-  lang: languageEnum
-): Promise<{ status: number; response: ErrorResponse }> {
+const defaultLanguage = languageEnum.EN;
+
+export async function errorHandler({ error, set }: ErrorContext & { error: unknown }): Promise<ErrorResponse> {
   if (error instanceof AppError) {
-    return {
-      status: error.status,
-      response: {
-        code: error.errorCode
-      }
-    };
+    set.status = error.status;
+
+    return { code: error.errorCode };
   }
 
   if (error instanceof ValidationError) {
     const elysiaError = error as { all?: readonly { path: string; message: string }[] };
     const { code, status, validations } = await handleElysiaValidationError(
       elysiaError.all ?? [{ path: '', message: error.message }],
-      lang
+      defaultLanguage
     );
 
-    return {
-      status,
-      response: {
-        code,
-        validations
-      }
-    };
+    set.status = status;
+
+    return { code, validations };
   }
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    const { code, status, validations } = await handlePrismaError(error, lang);
-    return {
-      status,
-      response: {
-        code,
-        validations
-      }
-    };
+    const { code, status, validations } = await handlePrismaError(error, defaultLanguage);
+
+    set.status = status;
+
+    return { code, validations };
   }
 
   if (error instanceof Prisma.PrismaClientValidationError) {
-    const { code, status } = await handlePrismaValidationError(error, lang);
-    return {
-      status,
-      response: {
-        code
-      }
-    };
+    const { code, status } = await handlePrismaValidationError(error, defaultLanguage);
+
+    set.status = status;
+
+    return { code };
   }
 
   const err = error as Error;
-  return {
-    status: 500,
-    response: {
-      code: "INTERNAL_SERVER_ERROR",
-      message: err.message
-    }
-  };
+
+  set.status = 500;
+
+  return { code: "INTERNAL_SERVER_ERROR", message: err.message };
 }

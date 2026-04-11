@@ -29,7 +29,7 @@ export class PrismaTransactionContext {
   }
 
   _getClient(): TransactionClient {
-    return this.storage.getStore()?.client ?? (this.prisma as unknown as TransactionClient);
+    return this.storage.getStore()?.client ?? (this.prisma as TransactionClient);
   }
 
   isInTransaction(): boolean {

@@ -1,5 +1,9 @@
 import { languageEnum } from "@/core/constants/language.enum";
 
+export const metadata = {
+    appName: process.env.APP_NAME || "Boilerplate API",
+}
+
 export const serverConfig = {
     port: Number(process.env.PORT) || 3000,
     host: process.env.HOST || "0.0.0.0",
@@ -23,6 +27,12 @@ export const corsConfig = {
     exposedHeaders: ['set-cookie', 'set-auth-jwt'],
     credentials: true,
 };
+
+export const betterAuthConfig = {
+    secret: process.env.BETTER_AUTH_SECRET!,
+    url: `${serverUrl}/auth`
+}
+
 
 export const publicConfig = {
     defaultLang: languageEnum.PT

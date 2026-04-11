@@ -3,25 +3,17 @@ import { swagger } from "@elysiajs/swagger";
 import { node } from "@elysiajs/node";
 import { cors } from '@elysiajs/cors';
 import { routes } from "./routes";
-import { processError } from "@/core/errors/error.handler";
-import { languageEnum } from "@/core/constants/language.enum";
+import { errorHandler } from "@/core/errors/error.handler";
 import logger from "@/infrastructure/logger/logger";
-import { corsConfig, serverConfig } from "@/infrastructure/config";
+import { corsConfig, metadata, serverConfig } from "@/infrastructure/config";
 import { errorSchema } from "./schemas";
 import { seed } from "@/infrastructure/database/prisma/seed";
+import { authTag, betterAuthSchema, prefixedAuthPaths } from "@/infrastructure/auth/openapi-better-auth";
 
 seed();
 
 const app = new Elysia({ adapter: node() })
-  .onError(async ({ error, set }) => {
-    const language = languageEnum.EN;
-
-    const { status, response } = await processError(error, language);
-
-    set.status = status;
-
-    return response;
-  })
+  .onError(errorHandler)
   .model({
     ErrorResponse: errorSchema,
   })
@@ -37,9 +29,12 @@ const app = new Elysia({ adapter: node() })
     path: '/docs',
     documentation: {
       info: {
-        title: `${process.env.APP_NAME}`,
+        title: metadata.appName,
         version: '1.0.0'
-      }
+      },
+      tags: [authTag],
+      components: betterAuthSchema.components as any,
+      paths: prefixedAuthPaths,
     }
   }))
   .listen(serverConfig.port);

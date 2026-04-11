@@ -1,13 +1,12 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { bearer, organization } from "better-auth/plugins";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { bearer, openAPI } from "better-auth/plugins";
+import { betterAuthConfig, corsConfig } from "../config";
+import { prisma } from "../database/prisma/client";
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
-  trustedOrigins: ["http://localhost:3000"],
+  baseURL: betterAuthConfig.url,
+  trustedOrigins: corsConfig.origin,
   database: prismaAdapter(prisma, {
     provider: "sqlite",
   }),
@@ -39,7 +38,7 @@ export const auth = betterAuth({
   },
   plugins: [
     bearer(),
-    organization(),
+    openAPI()
   ],
 });
 

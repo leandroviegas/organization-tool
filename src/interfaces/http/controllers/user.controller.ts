@@ -2,8 +2,13 @@ import { Elysia, t } from "elysia";
 import { userService } from "@/application";
 import { metaSchema, paginationSchema } from "@/interfaces/http/schemas/pagination";
 import { UserSchema } from "../schemas/models/user.schema";
+import { authMiddleware } from "../middleware/auth.middleware";
 
-export const userController = new Elysia({ prefix: "/users" })
+export const userController = new Elysia({
+  prefix: "/users",
+  detail: { tags: ['Users'] }
+})
+  .use(authMiddleware)
   .get("/", async ({ query }) => {
     const { users, meta } = await userService.findAll(query);
 
